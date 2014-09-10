@@ -5,6 +5,9 @@ group = 'net.glowstone'
 version = '1.0-SNAPSHOT'
 jar.baseName = 'remapper'
 
+sourceCompatibility = '1.7'
+targetCompatibility = '1.7'
+
 defaultTasks 'clean', 'build', 'install'
 
 dependencies {
