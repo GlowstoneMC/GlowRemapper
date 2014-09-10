@@ -27,8 +27,8 @@ public class RemapperAction implements Action<Task> {
         ext.validate();
 
         final List<Mapping> mappings = readMappings(project.file(ext.getMappingFile()));
-        final File jarFile = project.file(ext.getTargetJar());
-        final File tempFile = new File(jarFile.getPath().replace(".jar", "-remap.jar"));
+        final File jarFile = project.file(ext.getInputJar());
+        final File tempFile = project.file(ext.getOutputJar());
 
         // build class and interface inheritance map
         InheritanceMap parents = new InheritanceMap();
@@ -77,20 +77,6 @@ public class RemapperAction implements Action<Task> {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
-        }
-
-        // copy temporary jar over original
-        try (FileInputStream fileIn = new FileInputStream(tempFile);
-             FileOutputStream fileOut = new FileOutputStream(jarFile)
-        ) {
-            transfer(fileIn, fileOut);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // remove temporary jar
-        if (!tempFile.delete()) {
-            throw new RuntimeException("Failed to delete " + tempFile);
         }
     }
 

@@ -6,7 +6,8 @@ package net.glowstone.remapper;
 public class RemapperExtension {
 
     private String mappingFile = null;
-    private String targetJar = null;
+    private String inputJar = null;
+    private String outputJar = null;
     private boolean sentinelEnabled = false;
 
     public String getMappingFile() {
@@ -17,12 +18,20 @@ public class RemapperExtension {
         this.mappingFile = mappingFile;
     }
 
-    public String getTargetJar() {
-        return targetJar;
+    public String getInputJar() {
+        return inputJar;
     }
 
-    public void setTargetJar(String targetJar) {
-        this.targetJar = targetJar;
+    public void setInputJar(String inputJar) {
+        this.inputJar = inputJar;
+    }
+
+    public String getOutputJar() {
+        return outputJar;
+    }
+
+    public void setOutputJar(String outputJar) {
+        this.outputJar = outputJar;
     }
 
     public boolean isSentinelEnabled() {
@@ -37,8 +46,11 @@ public class RemapperExtension {
         if (mappingFile == null) {
             throw new IllegalArgumentException("Missing remapper argument \"mappingFile\".");
         }
-        if (targetJar == null) {
-            throw new IllegalArgumentException("Missing remapper argument \"targetJar\".");
+        if (inputJar == null) {
+            throw new IllegalArgumentException("Missing remapper argument \"inputJar\".");
+        }
+        if (outputJar == null) {
+            outputJar = inputJar.replace(".jar", "-remap.jar");
         }
     }
 }
