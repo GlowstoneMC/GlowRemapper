@@ -29,8 +29,22 @@ public class RemapperAction implements Action<Task> {
         final List<Mapping> mappings = readMappings(project.file(ext.getMappingFile()));
         final File jarFile = project.file(ext.getTargetJar());
         final File tempFile = new File(jarFile.getPath().replace(".jar", "-remap.jar"));
-        System.out.println("Mappings: " + mappings);
-        System.out.println("Target jar: " + jarFile);
+
+        // build class and interface inheritance map
+        InheritanceMap parents = new InheritanceMap();
+        try (FileInputStream fileIn = new FileInputStream(jarFile);
+             ZipInputStream zipIn = new ZipInputStream(fileIn)
+        ) {
+            ZipEntry entryIn;
+            while ((entryIn = zipIn.getNextEntry()) != null) {
+                String name = entryIn.getName();
+                if (name.endsWith(".class") && !entryIn.isDirectory()) {
+                    parents.readClass(zipIn);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // perform transformation
         try (FileInputStream fileIn = new FileInputStream(jarFile);
@@ -45,8 +59,7 @@ public class RemapperAction implements Action<Task> {
 
                 if (name.endsWith(".class") && !entryIn.isDirectory()) {
                     // perform class transformation
-                    System.out.println("Transforming " + name);
-                    byte[] data = transform(zipIn);
+                    byte[] data = transform(zipIn, parents, mappings);
                     entryOut.setSize(data.length);
                     entryOut.setCompressedSize(-1);
                     zipOut.putNextEntry(entryOut);
@@ -57,6 +70,11 @@ public class RemapperAction implements Action<Task> {
                     transfer(zipIn, zipOut);
                 }
             }
+
+            // add remapped sentinel
+            if (ext.isSentinelEnabled()) {
+                zipOut.putNextEntry(new ZipEntry("remapped"));
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -64,7 +82,7 @@ public class RemapperAction implements Action<Task> {
         // copy temporary jar over original
         try (FileInputStream fileIn = new FileInputStream(tempFile);
              FileOutputStream fileOut = new FileOutputStream(jarFile)
-        ){
+        ) {
             transfer(fileIn, fileOut);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -76,14 +94,20 @@ public class RemapperAction implements Action<Task> {
         }
     }
 
-    private byte[] transform(InputStream in) throws IOException {
+    /**
+     * Run RemapClassVisitor over an input class.
+     */
+    private byte[] transform(InputStream in, InheritanceMap parents, List<Mapping> mappings) throws IOException {
         ClassReader reader = new ClassReader(in);
         ClassWriter writer = new ClassWriter(reader, 0);
-        ClassVisitor visitor = new RemapClassVisitor(writer);
+        ClassVisitor visitor = new RemapClassVisitor(writer, parents, mappings);
         reader.accept(visitor, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
         return writer.toByteArray();
     }
 
+    /**
+     * Copy between two streams.
+     */
     private void transfer(InputStream in, OutputStream out) throws IOException {
         int n;
         byte[] buffer = new byte[4096];
