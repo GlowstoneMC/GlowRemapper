@@ -1,5 +1,12 @@
 apply plugin: 'java'
+apply plugin: 'maven'
+
+group = 'net.glowstone'
+version = '1.0-SNAPSHOT'
+jar.baseName = 'remapper'
+
+defaultTasks 'clean', 'build', 'install'
 
 dependencies {
-	compile gradleApi()
+    compile gradleApi()
 }
