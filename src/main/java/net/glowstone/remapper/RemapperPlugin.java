@@ -10,8 +10,7 @@ public class RemapperPlugin implements Plugin<Project> {
 
     @Override
     public void apply(final Project project) {
-        project.getExtensions().create("remapper", RemapperExtension.class);
-        project.task("remap").doFirst(new RemapperAction());
+        project.getTasks().create("remap", RemapperTask.class);
     }
 
 }

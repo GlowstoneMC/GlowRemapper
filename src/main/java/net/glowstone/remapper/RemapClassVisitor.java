@@ -35,6 +35,7 @@ public class RemapClassVisitor extends ClassVisitor {
             if (name.equals(mapping.getMethodName()) &&
                     desc.equals(mapping.getMethodSignature()) &&
                     parents.isParent(currentClass, mapping.getClassName())) {
+                mapping.addUsage();
                 name = mapping.getNewName();
                 access |= Opcodes.ACC_SYNTHETIC;
                 break;

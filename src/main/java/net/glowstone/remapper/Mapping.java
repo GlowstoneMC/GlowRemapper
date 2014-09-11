@@ -10,6 +10,8 @@ public final class Mapping {
     private final String methodSignature;
     private final String newName;
 
+    private int usages;
+
     public Mapping(String className, String methodName, String methodSignature, String newName) {
         this.className = className;
         this.methodName = methodName;
@@ -33,14 +35,17 @@ public final class Mapping {
         return newName;
     }
 
+    public int getUsages() {
+        return usages;
+    }
+
+    public void addUsage() {
+        usages++;
+    }
+
     @Override
     public String toString() {
-        return "Mapping{" +
-                "className='" + className + '\'' +
-                ", methodName='" + methodName + '\'' +
-                ", methodSignature='" + methodSignature + '\'' +
-                ", newName='" + newName + '\'' +
-                '}';
+        return "{" + className + " " + methodName + " " + methodSignature + " " + newName + "}";
     }
 
 }

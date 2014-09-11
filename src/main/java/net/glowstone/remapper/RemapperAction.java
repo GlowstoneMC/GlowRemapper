@@ -21,18 +21,18 @@ import java.util.zip.ZipOutputStream;
 public class RemapperAction implements Action<Task> {
 
     @Override
-    public void execute(Task task) {
+    public void execute(Task baseTask) {
+        final RemapperTask task = (RemapperTask) baseTask;
         final Project project = task.getProject();
-        final RemapperExtension ext = (RemapperExtension) project.getExtensions().getByName("remapper");
-        ext.validate();
+        task.validate();
 
-        final List<Mapping> mappings = readMappings(project.file(ext.getMappingFile()));
-        final File jarFile = project.file(ext.getInputJar());
-        final File tempFile = project.file(ext.getOutputJar());
+        final List<Mapping> mappings = readMappings(task.getMappingFile());
+        final File inputFile = task.getInputJar();
+        final File outputFile = task.getOutputJar();
 
         // build class and interface inheritance map
         InheritanceMap parents = new InheritanceMap();
-        try (FileInputStream fileIn = new FileInputStream(jarFile);
+        try (FileInputStream fileIn = new FileInputStream(inputFile);
              ZipInputStream zipIn = new ZipInputStream(fileIn)
         ) {
             ZipEntry entryIn;
@@ -47,9 +47,9 @@ public class RemapperAction implements Action<Task> {
         }
 
         // perform transformation
-        try (FileInputStream fileIn = new FileInputStream(jarFile);
+        try (FileInputStream fileIn = new FileInputStream(inputFile);
              ZipInputStream zipIn = new ZipInputStream(fileIn);
-             FileOutputStream fileOut = new FileOutputStream(tempFile);
+             FileOutputStream fileOut = new FileOutputStream(outputFile);
              ZipOutputStream zipOut = new ZipOutputStream(fileOut)
         ) {
             ZipEntry entryIn;
@@ -70,13 +70,15 @@ public class RemapperAction implements Action<Task> {
                     transfer(zipIn, zipOut);
                 }
             }
-
-            // add remapped sentinel
-            if (ext.isSentinelEnabled()) {
-                zipOut.putNextEntry(new ZipEntry("remapped"));
-            }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+
+        // warn about unused mappings
+        for (Mapping mapping : mappings) {
+            if (mapping.getUsages() == 0) {
+                project.getLogger().warn("unused mapping: " + mapping);
+            }
         }
     }
 
