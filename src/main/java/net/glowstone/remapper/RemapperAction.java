@@ -89,7 +89,7 @@ public class RemapperAction implements Action<Task> {
         ClassReader reader = new ClassReader(in);
         ClassWriter writer = new ClassWriter(reader, 0);
         ClassVisitor visitor = new RemapClassVisitor(writer, parents, mappings);
-        reader.accept(visitor, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+        reader.accept(visitor, 0);
         return writer.toByteArray();
     }
 
