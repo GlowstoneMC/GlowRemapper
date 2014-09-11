@@ -61,6 +61,14 @@ public class RemapperTask extends AbstractTask {
         this.outputJar = outputJar;
     }
 
+    public void setOutputFilename(String filename) {
+        if (outputJar == null) {
+            outputJar = new File(filename);
+        } else {
+            outputJar = new File(outputJar.getParent(), filename);
+        }
+    }
+
     public void validate() {
         if (mappingFile == null) {
             throw new IllegalArgumentException("Missing remapper argument \"mappingFile\".");
